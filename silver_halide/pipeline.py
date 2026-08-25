@@ -9,6 +9,7 @@ from .stages.color import ColorIsp, to_linear
 from .stages.denoise import EdgeAwareDenoise
 from .stages.encoder import Encoder
 from .stages.grain import Grain
+from .stages.motion import Motion
 from .stages.optics import Optics
 from .stages.sensor import PRESETS, ChromaFloor, Sensor
 
@@ -16,7 +17,7 @@ from .stages.sensor import PRESETS, ChromaFloor, Sensor
 @dataclass(frozen=True)
 class Recipe:
     strength: str = "natural"
-    ca: float = 0.0030
+    ca: float = 0.0009
     vignette: float = 0.18
     blur: float = 0.35
     grain: float = 0.0018
@@ -32,6 +33,7 @@ class Develop:
         self.recipe = recipe
         self.sensor = Sensor(PRESETS[recipe.strength], seed=recipe.seed)
         self.optics = Optics(ca=recipe.ca, vignette=recipe.vignette, blur=recipe.blur)
+        self.motion = Motion()
         self.cfa = Cfa()
         self.denoise = EdgeAwareDenoise()
         self.isp = ColorIsp()
@@ -50,6 +52,7 @@ class Develop:
         linear = to_linear(big)
         linear = self.white_balance(linear)
         linear = self.optics.apply(linear)
+        linear = self.motion.apply(linear)
         mosaic = self.cfa.mosaic(linear)
         mosaic = self.sensor.apply(mosaic)
         linear = self.cfa.demosaic(mosaic)

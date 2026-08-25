@@ -5,7 +5,7 @@ from scipy import ndimage
 class Optics:
     """Field-dependent lens: quadratic lateral CA, asymmetric vignette, faint astigmatic blur."""
 
-    def __init__(self, ca: float = 0.0035, vignette: float = 0.22, blur: float = 0.35) -> None:
+    def __init__(self, ca: float = 0.0009, vignette: float = 0.18, blur: float = 0.35) -> None:
         self.ca = ca
         self.vignette = vignette
         self.blur = blur
@@ -25,9 +25,16 @@ class Optics:
             axis=-1,
         )
         out = ndimage.gaussian_filter(out, sigma=(self.blur, self.blur * 1.2, 0))
+        out = self._field_softness(out, r)
         ell = 1.0 + 0.06 * ((xx - cx) / (w / 2))
         falloff = 1.0 - self.vignette * np.clip(r * ell, 0.0, 1.0) ** 2.2
         return np.clip(out * falloff[..., None], 0.0, 1.0)
+
+    def _field_softness(self, img: np.ndarray, r: np.ndarray) -> np.ndarray:
+        """Field curvature: corners resolve softer than center, like a real lens."""
+        soft = ndimage.gaussian_filter(img, sigma=(1.6, 1.6, 0))
+        weight = (np.clip(r - 0.55, 0.0, 1.0) ** 2 * 0.6)[..., None]
+        return img * (1.0 - weight) + soft * weight
 
     def _rescale(self, channel: np.ndarray, factor: np.ndarray, cy: float, cx: float) -> np.ndarray:
         h, w = channel.shape

@@ -53,7 +53,7 @@ PRESETS = {
 class ChromaFloor:
     """Shadow chroma noise a phone ISP leaves behind after chroma denoise."""
 
-    def __init__(self, sigma: float = 4e-4) -> None:
+    def __init__(self, sigma: float = 3.2e-4) -> None:
         self.sigma = sigma
 
     def apply(self, rgb: np.ndarray, iso: int = 400) -> np.ndarray:

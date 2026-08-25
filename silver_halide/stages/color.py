@@ -31,4 +31,6 @@ class ColorIsp:
         detail = gamma_img - ndimage.gaussian_filter(gamma_img, sigma=(0.9, 0.9, 0))
         edge = np.abs(ndimage.gaussian_filter(gamma_img @ np.array([0.2126, 0.7152, 0.0722]), 1.0))
         mask = np.clip(edge / (np.percentile(edge, 85) + 1e-12), 0.0, 1.0)[..., None]
-        return np.clip(gamma_img + self.sharpen_amount * detail * (0.35 + 0.65 * mask), 0.0, 1.0)
+        delta = self.sharpen_amount * detail * (0.35 + 0.65 * mask)
+        delta = np.clip(delta, -0.012, 0.012)
+        return np.clip(gamma_img + delta, 0.0, 1.0)
