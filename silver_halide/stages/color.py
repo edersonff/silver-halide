@@ -11,19 +11,24 @@ def to_linear(img: np.ndarray) -> np.ndarray:
 
 
 class ColorIsp:
-    """Phone-style ISP: WB happens in the pipeline; here tone, saturation, then sharpen."""
+    """Phone-style ISP: local-ish tone curve (shadow lift, highlight roll-off), saturation, masked sharpen."""
 
-    def __init__(self, saturation: float = 1.06, contrast: float = 0.05, sharpen_amount: float = 0.3) -> None:
+    def __init__(self, saturation: float = 1.03, shadow_lift: float = 0.035, highlight_roll: float = 0.6, sharpen_amount: float = 0.28) -> None:
         self.saturation = saturation
-        self.contrast = contrast
+        self.shadow_lift = shadow_lift
+        self.highlight_roll = highlight_roll
         self.sharpen_amount = sharpen_amount
 
     def tone(self, linear: np.ndarray) -> np.ndarray:
-        g = to_gamma(np.clip(linear, 0.0, 1.0))
-        g = 0.5 + (g - 0.5) * (1.0 + self.contrast)
+        x = np.clip(linear, 0.0, 1.0)
+        x = x + self.shadow_lift * np.exp(-x / 0.10) * 0.35
+        x = x * (1.0 - self.highlight_roll * np.clip((x - 0.75) / 0.25, 0.0, 1.0) ** 2 * 0.18)
+        g = to_gamma(np.clip(x, 0.0, 1.0))
         luma = g @ np.array([0.2126, 0.7152, 0.0722])
         return np.clip(luma[..., None] + (g - luma[..., None]) * self.saturation, 0.0, 1.0)
 
     def sharpen(self, gamma_img: np.ndarray) -> np.ndarray:
-        soft = ndimage.gaussian_filter(gamma_img, sigma=(1.1, 1.1, 0))
-        return np.clip(gamma_img + self.sharpen_amount * (gamma_img - soft), 0.0, 1.0)
+        detail = gamma_img - ndimage.gaussian_filter(gamma_img, sigma=(0.9, 0.9, 0))
+        edge = np.abs(ndimage.gaussian_filter(gamma_img @ np.array([0.2126, 0.7152, 0.0722]), 1.0))
+        mask = np.clip(edge / (np.percentile(edge, 85) + 1e-12), 0.0, 1.0)[..., None]
+        return np.clip(gamma_img + self.sharpen_amount * detail * (0.35 + 0.65 * mask), 0.0, 1.0)

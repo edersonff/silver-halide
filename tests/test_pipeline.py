@@ -2,12 +2,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from PIL import Image
+sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
 
-import numpy as np
+from flat_noise import flat_noise_stats
 
 from silver_halide.pipeline import Recipe, Develop
-from silver_halide.proof.spectra import metrics
 from silver_halide.stages.encoder import was_processed
 
 ROOT = Path(__file__).parent
@@ -15,13 +14,12 @@ SOURCE = Path("/home/eder/.codex/generated_images/01a03972-9584-70f0-935f-ee41ad
 OUT = Path("/tmp/opencode/silver_test/test-out.jpg")
 
 
-def test_develop_adds_sensor_texture_and_natural_spectrum():
+def test_develop_matches_real_phone_flat_noise_band():
     Develop(Recipe()).run(str(SOURCE), str(OUT))
-    before = metrics(str(SOURCE))
-    after = metrics(str(OUT))
-    assert after["mean"] > before["mean"] * 2.5
-    assert after["slope"] > before["slope"]
-    assert -3.2 < after["slope"] < -2.0
+    flat = flat_noise_stats(str(OUT))
+    assert flat is not None and flat["flat_patches"] > 50
+    assert 0.002 <= flat["noise_std_mean"] <= 0.006, flat
+    assert flat["lf_hf_log10"] > 0.0, "grain must be fine (HF-weighted), not a lowpass veil"
 
 
 def test_develop_is_deterministic_per_seed():
