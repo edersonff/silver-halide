@@ -11,6 +11,7 @@ from silver_halide.stages.encoder import was_processed
 
 ROOT = Path(__file__).parent
 SOURCE = Path("/home/eder/.codex/generated_images/01a03972-9584-70f0-935f-ee41ade98aaf/exec-fcef8f8a-a229-469b-af4e-3702485ab928.png")
+REAL_REF = Path("/tmp/opencode/silver_test/real-ref-1402.jpg")
 OUT = Path("/tmp/opencode/silver_test/test-out.jpg")
 
 
@@ -28,6 +29,18 @@ def test_develop_is_deterministic_per_seed():
     Develop(Recipe(seed=3)).run(str(SOURCE), str(a))
     Develop(Recipe(seed=3)).run(str(SOURCE), str(b))
     assert a.read_bytes() == b.read_bytes()
+
+
+def test_audit_separates_real_from_generated_skin():
+    import pytest
+
+    from silver_halide.audit import audit
+
+    if not REAL_REF.exists():
+        pytest.skip("real reference capture not present")
+    real = audit(str(REAL_REF))
+    fake = audit(str(SOURCE))
+    assert fake["painted_skin_of_skin"] > real["painted_skin_of_skin"] * 2
 
 
 def test_no_soap_detail_retained():

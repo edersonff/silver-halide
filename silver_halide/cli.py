@@ -13,11 +13,21 @@ def main(argv: list[str] | None = None) -> int:
         description="Develops an AI image into a photograph-grade JPEG: sensor noise, optics, CFA, ISP, grain.",
     )
     parser.add_argument("input", help="image to develop (PNG/JPEG)")
-    parser.add_argument("output", help="JPEG path to write")
+    parser.add_argument("output", nargs="?", help="JPEG path to write")
     parser.add_argument("--strength", choices=["subtle", "natural", "harsh"], default="natural", help="sensor character (default: natural)")
     parser.add_argument("--seed", type=int, default=7, help="deterministic output (default: 7)")
+    parser.add_argument("--audit", metavar="REPORT", help="write a generation-defect report (JSON) for INPUT")
     parser.add_argument("--json", action="store_true", help="machine-readable result")
     args = parser.parse_args(argv)
+
+    if args.audit:
+        from .audit import audit
+
+        overlay = args.audit.rsplit(".", 1)[0] + "-overlay.png"
+        print(json.dumps(audit(args.input, overlay)))
+        return 0
+    if not args.output:
+        parser.error("output is required unless --audit is used")
 
     try:
         if was_processed(args.input):

@@ -32,8 +32,15 @@ real WhatsApp-laundered photo as "the real smartphone capture".
 | flag | default | what it does |
 |---|---|---|
 | `--strength` | `natural` | sensor character: `subtle` (ISO 100), `natural` (ISO 400), `harsh` (ISO 1600) |
+| `--audit REPORT.json` | off | generation-defect report: painted-skin locator (local kurtosis of skin micro-texture, calibrated on real iPhone captures; real-photo false-positive ~0.13) + overlay PNG |
 | `--seed` | `7` | same seed, byte-identical output |
 | `--json` | off | machine-readable result line |
+
+Audit example — `silver-halide render.png --audit report.json` writes the JSON
+report plus `report-overlay.png` with flagged regions tinted. A photorealistic
+GPT-image render scores `painted_skin_of_skin` 0.61; a real iPhone photo 0.13;
+images developed by this module land at ~0.09. Painterly-style outputs
+(Craiyon-class) are not covered by the heuristic.
 
 Internals (via `Recipe` in Python): `ca 0.0035`, `vignette 0.22`, `blur 0.35`,
 `grain 0.007`, `quality 90` with 4:2:0 subsampling.
