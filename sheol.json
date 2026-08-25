@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "name": "silver-halide",
+  "description": "Develops an AI render into a photograph-grade JPEG: sensor noise on the Bayer mosaic, lens character, tone ISP, grain, phone JPEG",
+  "input": "an image path as the first argument, PNG or JPEG from any generator",
+  "output": "a developed JPEG at the path passed second, same framing with photographic acquisition character",
+  "kind": "module",
+  "tags": ["image", "photography", "noise", "realism", "jpeg", "camera"],
+  "license": "MIT",
+  "requires": ["python>=3.10"],
+  "entry": { "cli": "bin/silver-halide render.png photo.jpg" },
+  "cost": { "model": "free" }
+}
