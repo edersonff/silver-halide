@@ -28,7 +28,13 @@ class Optics:
         out = self._field_softness(out, r)
         ell = 1.0 + 0.06 * ((xx - cx) / (w / 2))
         falloff = 1.0 - self.vignette * np.clip(r * ell, 0.0, 1.0) ** 2.2
+        self.last_falloff = falloff
         return np.clip(out * falloff[..., None], 0.0, 1.0)
+
+    def lsc_gain(self) -> np.ndarray:
+        """Phone lens-shading correction: undoes 75% of the falloff, keeping a
+        realistic residual; corner noise rides the boost, as in a real ISP."""
+        return self.last_falloff**-0.75
 
     def _field_softness(self, img: np.ndarray, r: np.ndarray) -> np.ndarray:
         """Field curvature: corners resolve softer than center, like a real lens."""

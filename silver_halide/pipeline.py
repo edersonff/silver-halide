@@ -52,6 +52,7 @@ class Develop:
         linear = to_linear(big)
         linear = self.white_balance(linear)
         linear = self.optics.apply(linear)
+        linear = np.clip(linear * self.optics.lsc_gain()[..., None], 0.0, 1.0)
         linear = self.motion.apply(linear)
         mosaic = self.cfa.mosaic(linear)
         mosaic = self.sensor.apply(mosaic)
