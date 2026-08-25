@@ -6,12 +6,12 @@ class Grain:
     """Grain whose spectrum and amplitude follow local structure: smooth in flats,
     crisper near detail, louder near edges where sharpening excites it."""
 
-    def __init__(self, amount: float = 0.0018, patch_sigma: float = 24.0, patch_gain: float = 0.35) -> None:
+    def __init__(self, amount: float = 0.0024, patch_sigma: float = 24.0, patch_gain: float = 0.35) -> None:
         self.amount = amount
         self.patch_sigma = patch_sigma
         self.patch_gain = patch_gain
 
-    def apply(self, gamma_img: np.ndarray) -> np.ndarray:
+    def apply(self, gamma_img: np.ndarray, denoise_mask: np.ndarray | None = None) -> np.ndarray:
         h, w = gamma_img.shape[:2]
         luma = gamma_img @ np.array([0.2126, 0.7152, 0.0722])
         detail = np.abs(luma - ndimage.gaussian_filter(luma, 1.4))
@@ -28,7 +28,7 @@ class Grain:
         amplitude = 1.0 + self.patch_gain * np.clip(field, -2.0, 2.0) / 2.0
 
         local_luma = ndimage.gaussian_filter(luma, sigma=6.0)
-        weight = 0.50 + 0.75 * np.clip(local_luma, 0.0, 1.0)
+        weight = 1.0 + 0.75 * np.clip(local_luma, 0.0, 1.0)
         edge = np.clip(detail_n / (np.percentile(detail_n, 97) + 1e-12), 0.0, 1.0)
         edge_boost = 1.0 + 0.45 * ndimage.gaussian_filter(edge, 1.0)
 

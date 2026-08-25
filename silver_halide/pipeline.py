@@ -20,7 +20,7 @@ class Recipe:
     ca: float = 0.0009
     vignette: float = 0.18
     blur: float = 0.35
-    grain: float = 0.0018
+    grain: float = 0.0024
     quality: int = 89
     supersample: float = 1.25
     seed: int = 7
@@ -57,11 +57,11 @@ class Develop:
         mosaic = self.cfa.mosaic(linear)
         mosaic = self.sensor.apply(mosaic)
         linear = self.cfa.demosaic(mosaic)
-        linear = self.denoise.apply(linear)
         gamma = self.isp.tone(linear)
 
         small = ndimage.zoom(gamma, (h / gamma.shape[0], w / gamma.shape[1], 1), order=3)
         small = np.clip(small, 0.0, 1.0)
+        small = self.denoise.apply(small)
         small = self.chroma.apply(small, iso=self.sensor.p.iso)
         small = self.grain.apply(small)
         small = self.isp.sharpen(small)
