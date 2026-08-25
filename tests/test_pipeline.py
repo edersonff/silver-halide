@@ -30,6 +30,18 @@ def test_develop_is_deterministic_per_seed():
     assert a.read_bytes() == b.read_bytes()
 
 
+def test_no_soap_detail_retained():
+    """v20 disease guard: buying histogram bands by destroying texture."""
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).parent.parent / "tools"))
+    from detail_guard import detail_retention
+
+    Develop(Recipe()).run(str(SOURCE), str(OUT))
+    ret = detail_retention(str(SOURCE), str(OUT))
+    assert ret >= 0.85, f"detail retention {ret:.2f} — output is soapy"
+
+
 def test_marker_makes_rerun_exit_2():
     code = subprocess.run(
         [sys.executable, "-m", "silver_halide.cli", str(OUT), "/tmp/opencode/silver_test/again.jpg"],

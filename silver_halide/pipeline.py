@@ -9,6 +9,7 @@ from .stages.color import ColorIsp, to_linear
 from .stages.denoise import EdgeAwareDenoise
 from .stages.encoder import Encoder
 from .stages.grain import Grain
+from .stages.microtexture import MicroTexture
 from .stages.motion import Motion
 from .stages.optics import Optics
 from .stages.sensor import PRESETS, ChromaFloor, Sensor
@@ -39,6 +40,7 @@ class Develop:
         self.isp = ColorIsp()
         self.grain = Grain(amount=recipe.grain)
         self.chroma = ChromaFloor()
+        self.micro = None
         self.encoder = Encoder(quality=recipe.quality)
 
     def run(self, source: str, target: str) -> dict:
@@ -64,6 +66,8 @@ class Develop:
         small = self.denoise.apply(small)
         small = self.chroma.apply(small, iso=self.sensor.p.iso)
         small = self.grain.apply(small)
+        if self.micro is not None:
+            small = self.micro.apply(small)
         small = self.isp.sharpen(small)
         self.encoder.save(small, target)
         return {"width": w, "height": h, "strength": self.recipe.strength}

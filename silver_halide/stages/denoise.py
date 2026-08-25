@@ -6,7 +6,7 @@ class EdgeAwareDenoise:
     """Phone ISP YUV-domain NR: kills the painterly mid-texture wash (2-6px daubs),
     preserves strong edges; runs post-gamma like real phone pipelines."""
 
-    def __init__(self, chroma_sigma: float = 0.6, luma_flat_gain: float = 1.0, flat_threshold: float = 9e-3, wash_radius: int = 4, passes: int = 2) -> None:
+    def __init__(self, chroma_sigma: float = 0.6, luma_flat_gain: float = 0.45, flat_threshold: float = 8.5e-3, wash_radius: int = 3, passes: int = 1) -> None:
         self.chroma_sigma = chroma_sigma
         self.luma_flat_gain = luma_flat_gain
         self.flat_threshold = flat_threshold
